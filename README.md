@@ -43,7 +43,7 @@ Goal: showcase gameplay programming, combat systems, AI, UI, and polish.
 - Understanding of core Unreal patterns (Actors/Components, UObjects, replication-ready design)
 
 ## 🛠️ Tech Stack
-- Unreal Engine: 5.4
+- Unreal Engine: 5.7
 - Language: C++
 - Tools: Unreal Engine, VS code
 
