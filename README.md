@@ -37,6 +37,10 @@ Goal: showcase gameplay programming, combat systems, AI, UI, and polish.
 - [ ] Inventory UI
 - [ ] Settings menu (audio, sensitivity)
 
+### Realistic Landscape
+- [ ] Usage of UE 5.7 new functions
+- [ ] PCG for the landscape
+
 ## 🧠 What I want to demonstrate
 - Clean and maintainable gameplay code (C++), with data-driven tuning
 - Ability to ship a small but polished slice (menus, UX, stability)
