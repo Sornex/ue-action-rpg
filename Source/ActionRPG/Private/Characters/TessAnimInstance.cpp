@@ -26,5 +26,6 @@ void UTessAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		GroundSpeed = UKismetMathLibrary::VSizeXY(TessMovement->Velocity);
 		IsFalling = TessMovement->IsFalling();
+		CharacterState = Tess->GetCharacterState();
 	}
 }

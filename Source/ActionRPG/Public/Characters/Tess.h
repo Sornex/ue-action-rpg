@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "CharacterTypes.h"
 #include "Tess.generated.h"
 
 class UInputAction;
@@ -10,6 +11,7 @@ struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
+class AItem;
 
 UCLASS()
 class ACTIONRPG_API ATess : public ACharacter
@@ -38,17 +40,32 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	TObjectPtr<UInputAction> JumpAction;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	TObjectPtr<UInputAction> InteractAction;
+	
 private:
+	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
+	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> ViewCamera;
+	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UGroomComponent> Hair;
+	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UGroomComponent> EyeBrows;
 	
+	UPROPERTY(VisibleInstanceOnly)
+	TObjectPtr<AItem> OverlappingItem;
+	
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
-
+	void Interact(const FInputActionValue& Value);
+	
+public:
+	FORCEINLINE void SetOverlappingItem(AItem* Item){ OverlappingItem = Item; }
+	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 };

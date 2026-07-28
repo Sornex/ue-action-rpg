@@ -12,6 +12,8 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Items/Item.h"
+#include "Items/Weapons/Weapon.h"
 
 ATess::ATess()
 {
@@ -109,6 +111,11 @@ void ATess::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed,this, &ACharacter::StopJumping);
 	}
+	
+	if (InteractAction)
+	{
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ATess::Interact);
+	}
 }
 
 void ATess::Move(const FInputActionValue& Value)
@@ -139,4 +146,14 @@ void ATess::Look(const FInputActionValue& Value)
 
 	AddControllerYawInput(LookInput.X);
 	AddControllerPitchInput(LookInput.Y);
+}
+
+void ATess::Interact(const FInputActionValue& Value)
+{
+	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	}
 }

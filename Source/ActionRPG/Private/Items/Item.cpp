@@ -1,6 +1,7 @@
 #include "Items/Item.h"
 #include "ActionRPG/DebugMacros.h"
-
+#include "Components/SphereComponent.h"
+#include "Characters/Tess.h"
 
 AItem::AItem()
 {
@@ -8,28 +9,38 @@ AItem::AItem()
 	
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemStaticMesh"));
 	RootComponent = ItemMesh;
+	
+	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
+	Sphere->SetupAttachment(GetRootComponent());
 }
 
 void AItem::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereOverlap);
+	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
 }
 
 void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	Runtime += DeltaTime;
-	
-	float RotationSpeed = 15.0f;
-	
-	FString Message = FString::Printf(TEXT("Delta Time: %f"), DeltaTime);
-	
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 60.f, FColor::Red, Message);
-	}
-	
-	AddActorWorldRotation(FRotator(RotationSpeed * DeltaTime, 0.0f, 0.0f));
 }
 
+void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	ATess* Tess = Cast<ATess>(OtherActor);
+	if (Tess)
+	{
+		Tess->SetOverlappingItem(this);
+	}
+}
+
+void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	ATess* Tess = Cast<ATess>(OtherActor);
+	if (Tess)
+	{
+		Tess->SetOverlappingItem(nullptr);
+	}
+}
