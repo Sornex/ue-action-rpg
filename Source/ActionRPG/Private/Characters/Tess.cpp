@@ -14,6 +14,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
+#include "Animation/AnimMontage.h"
 
 ATess::ATess()
 {
@@ -116,10 +117,17 @@ void ATess::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	{
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ATess::Interact);
 	}
+	
+	if (AttackAction)
+	{
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ATess::Attack);
+	}
 }
 
 void ATess::Move(const FInputActionValue& Value)
 {
+	if (ActionState != EActionState::EAS_Unoccupied) return;
+	
 	const FVector2D MovementInput = Value.Get<FVector2D>();
 
 	if (!Controller)
@@ -155,5 +163,98 @@ void ATess::Interact(const FInputActionValue& Value)
 	{
 		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
 		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		OverlappingItem = nullptr;
+		EquippedWeapon = OverlappingWeapon;
 	}
+	else
+	{
+		bool bCanDisarm = ActionState == EActionState::EAS_Unoccupied && 
+			CharacterState != ECharacterState::ECS_Unequipped;
+		
+		bool bCanEquip = ActionState == EActionState::EAS_Unoccupied && 
+			CharacterState == ECharacterState::ECS_Unequipped &&
+			EquippedWeapon;
+		
+		if (bCanDisarm)
+		{
+			PlayEquipMontage(FName("Disarm"));
+			CharacterState = ECharacterState::ECS_Unequipped;
+			ActionState = EActionState::EAS_EquippingWeapon;
+		}else if (bCanEquip)
+		{
+			PlayEquipMontage(FName("Equip"));
+			CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+			ActionState = EActionState::EAS_EquippingWeapon;
+		}
+	}
+}
+
+void ATess::Attack(const FInputActionValue& Value)
+{
+	const bool bCanAttack = 
+		ActionState == EActionState::EAS_Unoccupied && 
+		CharacterState != ECharacterState::ECS_Unequipped;
+	
+	if (bCanAttack)
+	{
+		ActionState = EActionState::EAS_Attacking;
+		PlayAttackMontage();
+	}
+}
+
+void ATess::PlayAttackMontage() const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AttackMontage)
+	{
+		AnimInstance->Montage_Play(AttackMontage);
+		const int32 Selection = FMath::RandRange(0, 2);
+		FName SectionName = FName();
+		switch (Selection)
+		{
+		case 0:
+			SectionName = FName("Attack1");
+			break;
+		case 1:
+			SectionName = FName("Attack2");
+			break;
+		case 2:
+			SectionName = FName("Attack3");
+			break;
+		default:
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
+	}
+}
+
+void ATess::PlayEquipMontage(FName SectionName) const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EquipMontage)
+	{
+		AnimInstance->Montage_Play(EquipMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
+	}
+}
+
+void ATess::Disarm()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("SpineSocket"));
+	}
+}
+
+void ATess::Arm()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
+	}
+}
+
+void ATess::FinishEquipping()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }

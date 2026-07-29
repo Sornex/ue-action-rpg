@@ -8,6 +8,12 @@
 
 class USphereComponent;
 
+enum class EItemState : uint8
+{
+	EIS_Unequipped UMETA(DisplayName = "Unequipped"),
+	EIS_Equipped UMETA(DisplayName = "Equipped")
+};
+
 UCLASS()
 class ACTIONRPG_API AItem : public AActor
 {
@@ -29,10 +35,13 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* ItemMesh;
-private:
-	float Runtime = 0.0f;
 	
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* Sphere;
+	
+	EItemState ItemState = EItemState::EIS_Unequipped;
+private:
+	float Runtime = 0.0f;
+	
 
 };

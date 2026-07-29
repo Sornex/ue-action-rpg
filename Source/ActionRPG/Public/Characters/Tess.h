@@ -12,6 +12,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
 class AItem;
+class UAnimMontage;
+class AWeapon;
 
 UCLASS()
 class ACTIONRPG_API ATess : public ACharacter
@@ -43,9 +45,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	TObjectPtr<UInputAction> InteractAction;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	TObjectPtr<UInputAction> AttackAction;
+	
 private:
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
-
+	
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
+	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
 	
@@ -61,10 +69,41 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	TObjectPtr<AItem> OverlappingItem;
 	
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	TObjectPtr<AWeapon> EquippedWeapon;
+
+	/**
+	 * Callbacks for input
+	 */
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
+	void Attack(const FInputActionValue& Value);
 	
+	/**
+	 * Animation montages
+	 */
+	
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> AttackMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> EquipMontage;
+	/**
+	 * Play Montage functions
+	 */
+	
+	void PlayAttackMontage() const;
+	void PlayEquipMontage(FName SectionName) const;
+	
+	UFUNCTION(BlueprintCallable)
+	void Disarm();
+	
+	UFUNCTION(BlueprintCallable)
+	void Arm();
+	
+	UFUNCTION(BlueprintCallable)
+	void FinishEquipping();
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item){ OverlappingItem = Item; }
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
