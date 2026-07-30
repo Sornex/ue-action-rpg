@@ -27,6 +27,9 @@ public:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollision(ECollisionEnabled::Type CollisionEnabled);
+
 protected:
 	virtual void BeginPlay() override;
 	
@@ -47,6 +50,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	TObjectPtr<UInputAction> AttackAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	TObjectPtr<UInputAction> DodgeAction;
 	
 private:
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
@@ -79,6 +85,7 @@ private:
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
 	void Attack(const FInputActionValue& Value);
+	void Dodge(const FInputActionValue& Value);
 	
 	/**
 	 * Animation montages
@@ -89,12 +96,15 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> EquipMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> DodgeMontage;
 	/**
 	 * Play Montage functions
 	 */
 	
 	void PlayAttackMontage() const;
-	void PlayEquipMontage(FName SectionName) const;
+	void PlayEquipMontage(const FName& SectionName) const;
 	
 	UFUNCTION(BlueprintCallable)
 	void Disarm();
@@ -104,6 +114,10 @@ private:
 	
 	UFUNCTION(BlueprintCallable)
 	void FinishEquipping();
+	
+	bool CanDodge() const;
+	void OnDodgeMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item){ OverlappingItem = Item; }
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }

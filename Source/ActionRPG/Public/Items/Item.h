@@ -34,10 +34,10 @@ protected:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UStaticMeshComponent* ItemMesh;
+	TObjectPtr<UStaticMeshComponent> ItemMesh;
 	
 	UPROPERTY(VisibleAnywhere)
-	USphereComponent* Sphere;
+	TObjectPtr<USphereComponent> Sphere;
 	
 	EItemState ItemState = EItemState::EIS_Unequipped;
 private:

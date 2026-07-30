@@ -15,6 +15,7 @@
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
+#include "Components/BoxComponent.h"
 
 ATess::ATess()
 {
@@ -122,7 +123,21 @@ void ATess::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	{
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ATess::Attack);
 	}
+	
+	if (DodgeAction)
+	{
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Started, this, &ATess::Dodge);
+	}
 }
+
+void ATess::SetWeaponCollision(ECollisionEnabled::Type CollisionEnabled)
+{
+	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
+	{
+		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
+	}
+}
+
 
 void ATess::Move(const FInputActionValue& Value)
 {
@@ -197,9 +212,40 @@ void ATess::Attack(const FInputActionValue& Value)
 	
 	if (bCanAttack)
 	{
+		EquippedWeapon->IgnoreActors.Empty();
 		ActionState = EActionState::EAS_Attacking;
 		PlayAttackMontage();
 	}
+}
+
+void ATess::Dodge(const FInputActionValue& Value)
+{
+	if (!CanDodge())
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	
+	if (!AnimInstance)
+	{
+		return;
+	}
+	
+	if (AnimInstance->Montage_IsPlaying(DodgeMontage))
+	{
+		return;
+	}
+	
+	ActionState = EActionState::EAS_Dodging;
+	
+	PlayAnimMontage(DodgeMontage, 1.0f, FName("Dodge"));
+	
+	FOnMontageEnded DodgeEndDelegate;
+
+	DodgeEndDelegate.BindUObject(this, &ATess::OnDodgeMontageEnded);
+
+	AnimInstance->Montage_SetEndDelegate(DodgeEndDelegate, DodgeMontage);
 }
 
 void ATess::PlayAttackMontage() const
@@ -228,7 +274,7 @@ void ATess::PlayAttackMontage() const
 	}
 }
 
-void ATess::PlayEquipMontage(FName SectionName) const
+void ATess::PlayEquipMontage(const FName& SectionName) const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && EquipMontage)
@@ -256,5 +302,31 @@ void ATess::Arm()
 
 void ATess::FinishEquipping()
 {
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+bool ATess::CanDodge() const
+{
+	if (!DodgeMontage)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DodgeMontage is not assigned"));
+		return false;
+	}
+
+	if (GetCharacterMovement()->IsFalling() || ActionState != EActionState::EAS_Unoccupied)
+	{
+		return false;
+	}
+	
+	return true;
+}
+
+void ATess::OnDodgeMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage != DodgeMontage)
+	{
+		return;
+	}
+
 	ActionState = EActionState::EAS_Unoccupied;
 }
